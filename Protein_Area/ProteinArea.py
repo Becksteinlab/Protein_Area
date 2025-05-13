@@ -176,4 +176,27 @@ class ProteinArea(AnalysisBase):
 
     def _conclude(self):
         self.results.area_per_frame = np.array(self.results.area_per_frame)
-        
+
+# use as script
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("tpr", help="your input tpr file")
+    parser.add_argument("xtc", help="your input xtc file")
+    parser.add_argument("--stop", type=int, default=None, help="last frame")
+    args = parser.parse_args()
+
+    tpr_path = args.tpr
+    xtc_path = args.xtc
+
+    u = mda.Universe(tpr_path, xtc_path)
+
+    print(tpr_path, xtc_path)
+
+    pa = ProteinArea(u)
+    pa.run(stop=args.stop, verbose=True)
+
+    np.save('area_profile.npy', pa.results.area_per_frame)
+    print("Saved to 'area_profile.npy'")
+
