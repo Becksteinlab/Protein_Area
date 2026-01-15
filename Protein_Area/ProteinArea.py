@@ -215,8 +215,12 @@ class ProteinArea(AnalysisBase):
         # across parallel workers.
 
     def _conclude(self):
-        self.results.area_per_frame = np.array(self.results.area_per_frame)
         # Converts the list of area values into a NumPy array for plt.
+        self.results.area_per_frame = np.array(self.results.area_per_frame)
+        self.results.slice_edges = self._slices
+        self.results.slice_centers = 0.5 * (
+            self._slices[:-1] + self._slices[1:]
+        )
 
     def run(self, *args, **kwargs):
         if kwargs.get("backend", "serial") != "serial":
