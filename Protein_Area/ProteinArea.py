@@ -252,7 +252,10 @@ if __name__ == "__main__":
         "--nopbc", action="store_true", help="disable PBC images"
     )
     parser.add_argument(
-        "--stop", type=int, default=None, help="max frames to process"
+        "--start", type=int, default=None, help="first frame to process"
+    )    
+    parser.add_argument(
+        "--stop", type=int, default=None, help="last frame to process"
     )
     parser.add_argument(
         "--backend",
@@ -294,6 +297,7 @@ if __name__ == "__main__":
     )
 
     pa.run(
+        start=args.start,
         stop=args.stop,
         backend=args.backend,
         n_workers=args.workers,
