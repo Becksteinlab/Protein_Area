@@ -308,7 +308,6 @@ if __name__ == "__main__":
     run_end = time.time()
     run_total = run_end - run_start
     logging.info(f"pa.run() completed in {run_total} seconds")
-    logging.info(f"Data saved to {args.output}")
 
     overall_end = time.time()
     overall_total = overall_end - overall_start
@@ -316,4 +315,4 @@ if __name__ == "__main__":
     logging.info("ProteinArea run finished! :)) \n")
 
     np.save(args.output, pa.results.area_per_frame)
-    print(f"Saved cross-sectional area time series to {args.output}")
+    logging.info(f"Saved cross-sectional area time series to {args.output}")
