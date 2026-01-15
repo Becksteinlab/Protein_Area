@@ -253,7 +253,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--start", type=int, default=None, help="first frame to process"
-    )    
+    )
     parser.add_argument(
         "--stop", type=int, default=None, help="last frame to process"
     )
@@ -265,9 +265,10 @@ if __name__ == "__main__":
     )
     parser.add_argument("--workers", type=int, help="number of workers")
     parser.add_argument("--verbose", action="store_true", help="verbose")
-    parser.add_argument(
-        "--showpoints", action="store_true", help="plot Voronoi for each slice"
-    )
+    # currently commented out in ProteinArea class
+    # parser.add_argument(
+    #    "--showpoints", action="store_true", help="plot Voronoi for each slice"
+    # )
 
     args = parser.parse_args()
 
