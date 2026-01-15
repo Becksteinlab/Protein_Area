@@ -10,8 +10,6 @@ in lipids. The code assumes the membrane in MD data is oriented in X-Y plane.
 import MDAnalysis as mda
 import numpy as np
 import shapely.geometry as geo
-import matplotlib.pyplot as plt
-import argparse
 import logging
 import time
 
@@ -19,10 +17,6 @@ import time
 from MDAnalysis.analysis.base import AnalysisBase
 from MDAnalysis.analysis.results import ResultsGroup
 from scipy.spatial import Voronoi
-from scipy.spatial import cKDTree
-from scipy.spatial import voronoi_plot_2d
-from matplotlib.patches import Polygon
-from numpy.linalg import norm
 
 
 def calc_area_per_slice(ag, nopbc=False):
@@ -90,6 +84,10 @@ def voronoi_pbc(ag, nopbc=False):
 
 
 def voronoi_plot(points_p, points_np, points_pbc, name=""):
+    # Import matplotlib only when this function is called
+    import matplotlib.pyplot as plt
+    from scipy.spatial import voronoi_plot_2d
+    
     # points_p = ag.select_atoms('protein').positions[:, 0:2]
     # points_np = ag.select_atoms('not protein').positions[:, 0:2]
 
