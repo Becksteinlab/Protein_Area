@@ -16,13 +16,16 @@ The rules for this file:
   * accompany each entry with github issue/PR number (Issue #xyz)
 -->
 
-## [Unreleased]
+## [unreleased] - YYYY-MM-DD
 
 ### Authors
-<!-- GitHub usernames of contributors to this release -->
+- @ChenouZhang
+- @frank-volcano
+- @orbeckst
 
 ### Added
-<!-- New added features -->
+- parallelization of analysis (#4, PR #7)
+
 
 ### Fixed
 <!-- Bug fixes -->
@@ -35,3 +38,14 @@ The rules for this file:
 
 ### Removed
 <!-- Removed features -->
+
+
+## [0.1.0] - 2026-01-15
+
+### Authors
+@ChenouZhang
+
+### Added
+Initial public release of Protein_Area package with base functionality
+for calculating the in-membrane area of a membrane protein from explicit
+solvent MD simulations via 2D Voronoi tesselation.
