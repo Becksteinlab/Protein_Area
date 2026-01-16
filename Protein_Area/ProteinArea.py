@@ -87,7 +87,7 @@ def voronoi_plot(points_p, points_np, points_pbc, name=""):
     # Import matplotlib only when this function is called
     import matplotlib.pyplot as plt
     from scipy.spatial import voronoi_plot_2d
-    
+
     # points_p = ag.select_atoms('protein').positions[:, 0:2]
     # points_np = ag.select_atoms('not protein').positions[:, 0:2]
 
@@ -239,7 +239,19 @@ if __name__ == "__main__":
         "--output",
         type=str,
         default="area_per_frame.npy",
-        help="output file name",
+        help="output file name for area per frame",
+    )
+    parser.add_argument(
+        "--output-slice-edges",
+        type=str,
+        default="slice_edges.npy",
+        help="output file name for slice edges",
+    )
+    parser.add_argument(
+        "--output-slice-centers",
+        type=str,
+        default="slice_centers.npy",
+        help="output file name for slice centers",
     )
     parser.add_argument("--zmin", type=float, default=0, help="lower z bound")
     parser.add_argument("--zmax", type=float, default=150, help="upper z bound")
@@ -261,7 +273,9 @@ if __name__ == "__main__":
         default="serial",
         help="parallel backend",
     )
-    parser.add_argument("--workers", type=int, help="number of workers")
+    parser.add_argument(
+        "--workers", type=int, help="number of workers for parallel processing"
+    )
     parser.add_argument("--verbose", action="store_true", help="verbose")
     # currently commented out in ProteinArea class
     # parser.add_argument(
@@ -314,3 +328,9 @@ if __name__ == "__main__":
 
     np.save(args.output, pa.results.area_per_frame)
     logging.info(f"Saved cross-sectional area time series to {args.output}")
+
+    np.save(args.output_slice_edges, pa.results.slice_edges)
+    logging.info(f"Saved slice edges to {args.output_slice_edges}")
+
+    np.save(args.output_slice_centers, pa.results.slice_centers)
+    logging.info(f"Saved slice centers to {args.output_slice_centers}")
