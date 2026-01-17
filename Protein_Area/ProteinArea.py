@@ -158,13 +158,16 @@ class ProteinArea(AnalysisBase):
         self._layer = layer
         self._showpoints = showpoints
         self._nopbc = nopbc
+        
+        self.results.area_per_frame = []
+        self._slices = np.arange(self._zmin, self._zmax, self._layer)
 
     def _prepare(self):
         # Called once before frame analysis starts
         # Initializes the result container
         # Calculates the Z-slice positions from zmin/zmax using layer thickness
-        self.results.area_per_frame = []
-        self._slices = np.arange(self._zmin, self._zmax, self._layer)
+        
+        return
 
     def _single_frame(self):
         # Loops over each z-slice of the protein and selects atoms within each slice using z-coord
