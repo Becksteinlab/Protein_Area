@@ -10,14 +10,13 @@ in lipids. The code assumes the membrane in MD data is oriented in X-Y plane.
 import MDAnalysis as mda
 import numpy as np
 import shapely.geometry as geo
-import matplotlib.pyplot as plt
+import logging
+import time
 
 
 from MDAnalysis.analysis.base import AnalysisBase
+from MDAnalysis.analysis.results import ResultsGroup
 from scipy.spatial import Voronoi
-from scipy.spatial import voronoi_plot_2d
-from matplotlib.patches import Polygon
-from numpy.linalg import norm
 
 
 def calc_area_per_slice(ag, nopbc=False):
@@ -29,7 +28,6 @@ def calc_area_per_slice(ag, nopbc=False):
     if nopbc:
         points_p, points_np = voronoi_pbc(ag, nopbc)
         points = np.concatenate((points_p, points_np))
-
     else:
         points_p, points_np, points_pbc = voronoi_pbc(ag)
         points = np.concatenate((points_p, points_np, points_pbc))
@@ -86,8 +84,8 @@ def voronoi_pbc(ag, nopbc=False):
 
 
 def voronoi_plot(points_p, points_np, points_pbc, name=""):
-    # points_p = ag.select_atoms('protein').positions[:, 0:2]
-    # points_np = ag.select_atoms('not protein').positions[:, 0:2]
+    import matplotlib.pyplot as plt
+    from scipy.spatial import voronoi_plot_2d
 
     p_size = len(points_p)
     points = np.concatenate((points_p, points_np, points_pbc))
@@ -100,15 +98,6 @@ def voronoi_plot(points_p, points_np, points_pbc, name=""):
     voronoi_plot_2d(
         vor, ax=ax, show_points=False, show_vertices=False, point_size=5
     )
-
-    # for region_index in vor.point_region[:p_size]:
-    #     region_vertices = vor.vertices[vor.regions[region_index]]
-    #     region_polygon = Polygon(region_vertices, facecolor='red', alpha=0.25)
-
-    #     center_point = points[region_index]
-    #     # print(region_vertices)
-
-    #     ax.add_patch(region_polygon)
 
     plt.scatter(points_p[:, 0], points_p[:, 1], c="b", s=5, label="protein")
     plt.scatter(
@@ -146,6 +135,12 @@ class ProteinArea(AnalysisBase):
     showpoints: output the voronoi points at certain layer(default=-1)
     """
 
+    @classmethod
+    def get_supported_backends(cls):
+        return ("serial", "multiprocessing", "dask")
+
+    _analysis_algorithm_is_parallelizable = True
+
     def __init__(
         self,
         atomgroup,
@@ -156,23 +151,25 @@ class ProteinArea(AnalysisBase):
         nopbc=False,
         **kwargs,
     ):
-        super(ProteinArea, self).__init__(
-            atomgroup.universe.trajectory, **kwargs
-        )
+        super().__init__(atomgroup.universe.trajectory, **kwargs)
+        self._ag = atomgroup
         self._zmin = zmin
         self._zmax = zmax
         self._layer = layer
-        self._ag = atomgroup
-        self._nopbc = nopbc
         self._showpoints = showpoints
+        self._nopbc = nopbc
 
-    def _prepare(self):
         self.results.area_per_frame = []
-
-        # slicing a frame
         self._slices = np.arange(self._zmin, self._zmax, self._layer)
 
+    def _prepare(self):
+        # Called once before frame analysis starts
+        # Initializes the result container
+        # Calculates the Z-slice positions from zmin/zmax using layer thickness
+        return
+
     def _single_frame(self):
+        # Loops over each z-slice of the protein and selects atoms within each slice using z-coord
         for slice_index, slice in enumerate(self._slices[:-1]):
             slice = self._ag.select_atoms(
                 "prop z > "
@@ -180,23 +177,36 @@ class ProteinArea(AnalysisBase):
                 + " and prop z < "
                 + str(self._slices[slice_index + 1])
             )
-
-            if self._showpoints:
-                points_p, points_np, points_pbc = voronoi_pbc(slice)
-                voronoi_plot(
-                    points_p, points_np, points_pbc, name=str(slice_index)
-                )
-
+            # Visualizes Voronoi Tess of each slice if --showpoints is enabled
+            # Currently disabled because it may not work with parallelization.
+            # if self._showpoints:
+            #     points_p, points_np, points_pbc = voronoi_pbc(slice)
+            #     voronoi_plot(points_p, points_np, points_pbc, name=str(slice_index))
             self.results.area_per_frame.append(
                 calc_area_per_slice(slice, self._nopbc)
             )
 
+    def _get_aggregator(self):
+        # in parallel we concatenate all results from each worker in a flat list
+        # of length N_FRAMES * N_SLICES
+        return ResultsGroup(
+            lookup={"area_per_frame": ResultsGroup.flatten_sequence}
+        )
+
     def _conclude(self):
+        # area_per_frame is a flat 1D array of length N_FRAMES * N_SLICES
+        # TODO: reshape to (N_FRAMES, N_SLICES) (see issue #3)
         self.results.area_per_frame = np.array(self.results.area_per_frame)
         self.results.slice_edges = self._slices
         self.results.slice_centers = 0.5 * (
             self._slices[:-1] + self._slices[1:]
         )
+
+    def run(self, *args, **kwargs):
+        if kwargs.get("backend", "serial") != "serial":
+            kwargs.pop("progressbar", None)
+            self._progress = None
+        return super().run(*args, **kwargs)
 
 
 if __name__ == "__main__":
@@ -207,6 +217,24 @@ if __name__ == "__main__":
     )
     parser.add_argument("tpr", help="GROMACS topology file (.tpr)")
     parser.add_argument("xtc", help="GROMACS trajectory file (.xtc)")
+    parser.add_argument(
+        "--output",
+        type=str,
+        default="area_per_frame.npy",
+        help="output file name for area per frame as flat 1D array with length N_FRAMES * N_SLICES",
+    )
+    parser.add_argument(
+        "--output-slice-edges",
+        type=str,
+        default="slice_edges.npy",
+        help="output file name for slice edges as 1D array with length N_SLICES+1",
+    )
+    parser.add_argument(
+        "--output-slice-centers",
+        type=str,
+        default="slice_centers.npy",
+        help="output file name for slice midpoints as 1D array with length N_SLICES",
+    )
     parser.add_argument("--zmin", type=float, default=0, help="lower z bound")
     parser.add_argument("--zmax", type=float, default=150, help="upper z bound")
     parser.add_argument(
@@ -216,32 +244,75 @@ if __name__ == "__main__":
         "--nopbc", action="store_true", help="disable PBC images"
     )
     parser.add_argument(
-        "--start", type=int, default=0, help="start frame to process"
+        "--start", type=int, default=None, help="first frame to process"
     )
     parser.add_argument(
-        "--stop", type=int, default=None, help="max frames to process"
+        "--stop", type=int, default=None, help="last frame to process"
     )
+    parser.add_argument(
+        "--backend",
+        choices=("serial", "multiprocessing", "dask"),
+        default="serial",
+        help="parallel backend",
+    )
+    parser.add_argument(
+        "--workers", type=int, help="number of workers for parallel processing"
+    )
+    parser.add_argument("--verbose", action="store_true", help="verbose")
+    # currently commented out in ProteinArea class
+    # parser.add_argument(
+    #    "--showpoints", action="store_true", help="plot Voronoi for each slice"
+    # )
+
     args = parser.parse_args()
 
+    logging.basicConfig(
+        filename="protein_area.log",
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    logging.info("ProteinArea run started! :)")
+    logging.info(f"Command line arguments: {args}")
+
+    overall_start = time.time()
+
+    logging.info("Loading MDAnalysis Universe")
     u = mda.Universe(args.tpr, args.xtc)
+    logging.info("MDAnalysis Universe loaded successfully")
+
     ag = u.select_atoms("all")
     pa = ProteinArea(
-        ag,
-        zmin=args.zmin,
-        zmax=args.zmax,
-        layer=args.layer,
-        showpoints=False,
-        nopbc=args.nopbc,
+        ag, zmin=args.zmin, zmax=args.zmax, layer=args.layer, nopbc=args.nopbc
+    )
+
+    run_start = time.time()
+    logging.info(
+        f"pa.run() starting (backend={args.backend}, workers={args.workers})"
+    )
+
+    pa.run(
         start=args.start,
         stop=args.stop,
-        verbose=True,
+        backend=args.backend,
+        n_workers=args.workers,
+        verbose=args.verbose,
     )
-    pa.run()
 
-    outname = "area_per_frame"
-    np.save(outname + ".npy", pa.results.area_per_frame)
-    np.save("slice_edges.npy", pa.results.slice_edges)
-    np.save("slice_centers.npy", pa.results.slice_centers)
-    print(f"Saved cross-sectional area time series to {outname}")
-    print(f"saved Slice edges to slice_edges.npy")
-    print(f"Saved Slice centers to slice_centers.npy")
+    run_end = time.time()
+    run_total = run_end - run_start
+    logging.info(f"pa.run() completed in {run_total} seconds")
+
+    overall_end = time.time()
+    overall_total = overall_end - overall_start
+    logging.info(f"Total script duration: {overall_total} seconds")
+    logging.info("ProteinArea run finished! :)) \n")
+
+    np.save(args.output, pa.results.area_per_frame)
+    logging.info(f"Saved cross-sectional area time series to {args.output}")
+
+    np.save(args.output_slice_edges, pa.results.slice_edges)
+    logging.info(f"Saved slice edges to {args.output_slice_edges}")
+
+    np.save(args.output_slice_centers, pa.results.slice_centers)
+    logging.info(f"Saved slice centers to {args.output_slice_centers}")

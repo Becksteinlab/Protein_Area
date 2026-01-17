@@ -21,3 +21,7 @@ The rules for this file:
 
 **2024**
 - Chenou Zhang <@ChenouZhang>
+
+**2026**
+- Marshal Loo <@frank-volcano>
+- Oliver Beckstein <@orbeckst>
