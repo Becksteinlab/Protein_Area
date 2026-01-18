@@ -27,11 +27,13 @@ The rules for this file:
 - parallelization of analysis (#4, PR #7)
 
 
+
 ### Fixed
 <!-- Bug fixes -->
 
 ### Changed
-<!-- Changes in existing functionality -->
+- reshape results.area_per frame (#3, PR #12)
+  results.area_per frame now produces 2D array of shape N_FRAMES * N_SLICES
 
 ### Deprecated
 <!-- Soon-to-be removed features -->
