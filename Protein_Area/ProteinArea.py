@@ -194,9 +194,11 @@ class ProteinArea(AnalysisBase):
         )
 
     def _conclude(self):
-        # area_per_frame is a flat 1D array of length N_FRAMES * N_SLICES
-        # TODO: reshape to (N_FRAMES, N_SLICES) (see issue #3)
+        # area_per_frame is 2D array of shape N_FRAMES * N_SLICES
         self.results.area_per_frame = np.array(self.results.area_per_frame)
+        self.results.area_per_frame = self.results.area_per_frame.reshape(
+            (self.n_frames, len(self._slices) - 1)
+        )
         self.results.slice_edges = self._slices
         self.results.slice_centers = 0.5 * (
             self._slices[:-1] + self._slices[1:]
