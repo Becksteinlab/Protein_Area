@@ -203,6 +203,8 @@ class ProteinArea(AnalysisBase):
         self.results.slice_centers = 0.5 * (
             self._slices[:-1] + self._slices[1:]
         )
+        self.results.times = self.times
+        self.results.frames = self.frames
 
     def run(self, *args, **kwargs):
         if kwargs.get("backend", "serial") != "serial":
@@ -318,3 +320,9 @@ if __name__ == "__main__":
 
     np.save(args.output_slice_centers, pa.results.slice_centers)
     logging.info(f"Saved slice centers to {args.output_slice_centers}")
+    
+    np.save("times.npy", pa.results.times)
+    logging.info(f"Saved frame times to times.npy")
+    
+    np.save("frames.npy", pa.results.frames)
+    logging.info(f"Saved frame indices to frames.npy")
