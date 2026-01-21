@@ -337,4 +337,4 @@ if __name__ == "__main__":
     logging.info(f"Saved frame times to {args.output_time}")
 
     np.save(args.output_frames, pa.frames)
-    logging.info(f"Saved frame indices to {args.output_frames}")
+    logging.info(f"Saved frame indices to {args.output_frames}") 
