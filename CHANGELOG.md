@@ -34,6 +34,8 @@ The rules for this file:
 ### Changed
 - reshape results.area_per frame (#3, PR #12)
   results.area_per frame now produces 2D array of shape N_FRAMES * N_SLICES
+- Add output args for times and frames. (#13, PR#14)
+- By default, the code now write times and frames to file.
 
 ### Deprecated
 <!-- Soon-to-be removed features -->
