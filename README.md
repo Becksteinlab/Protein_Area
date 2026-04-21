@@ -16,7 +16,7 @@ Protein_Area
 [badge_release]: https://img.shields.io/github/release-pre/ChenouZhang/Protein_Area.svg
 [url_actions]: https://github.com/ChenouZhang/Protein_Area/actions?query=branch%3Amain+workflow%3Agh-ci
 [url_codecov]: https://codecov.io/gh/ChenouZhang/Protein_Area/branch/main
-[url_docs]: https://Protein_Area.readthedocs.io/en/latest/?badge=latest
+[url_docs]: https://protein-area.readthedocs.io/en/latest/
 [url_latest_release]: https://github.com/ChenouZhang/Protein_Area/releases
 [url_license]: https://www.gnu.org/licenses/gpl-2.0
 [url_mda]: https://www.mdanalysis.org
