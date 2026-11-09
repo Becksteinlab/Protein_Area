@@ -4,7 +4,7 @@ Protein_Area was created by Chenou Zhang in 2024.
 
 
 All contributing authors are listed in this file below.
-The repository history at https://github.com/ChenouZhang/Protein_Area
+The repository history at https://github.com/Becksteinlab/Protein_Area
 and the CHANGELOG show individual code contributions.
 
 ## Chronological list of authors

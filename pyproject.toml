@@ -45,7 +45,7 @@ doc = [
 ]
 
 # [project.urls]
-# source = "https://github.com/ChenouZhang/Protein_Area"
+# source = "https://github.com/Becksteinlab/Protein_Area"
 # documentation = "https://Protein_Area.readthedocs.io"
 
 [tool.setuptools.packages.find]
